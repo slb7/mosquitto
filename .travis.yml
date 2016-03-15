@@ -7,6 +7,8 @@ os:
   - linux
   - osx
 
+sudo: true
+
 env:
   global:
     # COVERITY_SCAN_TOKEN
@@ -32,5 +34,5 @@ addons:
       version: 
     notification_email: roger@atchoo.org
     build_command_prepend: ./travis-configure.sh
-    build_command: "make -j 4"
+    build_command: "make binary -j 4"
     branch_pattern: coverity-.*
