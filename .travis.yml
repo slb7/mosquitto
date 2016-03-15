@@ -37,4 +37,4 @@ addons:
     build_command_prepend:
       - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cmake . ; fi
     build_command: "make -j 4"
-    branch_pattern: coverity-*
+    branch_pattern: coverity-.*
