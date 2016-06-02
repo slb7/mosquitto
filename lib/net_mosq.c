@@ -187,7 +187,7 @@ int _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *pa
 #endif
 	}
 
-	if(mosq->in_callback == false && mosq->threaded == false){
+	if(mosq->in_callback == false && mosq->threaded == mosq_ts_none){
 		return _mosquitto_packet_write(mosq);
 	}else{
 		return MOSQ_ERR_SUCCESS;
@@ -375,15 +375,20 @@ int _mosquitto_try_connect(struct mosquitto *mosq, const char *host, uint16_t po
 #ifdef WITH_TLS
 int mosquitto__socket_connect_tls(struct mosquitto *mosq)
 {
-	int ret;
-
+	int ret, err;
 	ret = SSL_connect(mosq->ssl);
-	if(ret != 1){
-		ret = SSL_get_error(mosq->ssl, ret);
-		if(ret == SSL_ERROR_WANT_READ){
+	if(ret != 1) {
+		err = SSL_get_error(mosq->ssl, ret);
+#ifdef WIN32
+		if (err == SSL_ERROR_SYSCALL) {
+			mosq->want_connect = true;
+			return MOSQ_ERR_SUCCESS;
+		}
+#endif
+		if(err == SSL_ERROR_WANT_READ){
 			mosq->want_connect = true;
 			/* We always try to read anyway */
-		}else if(ret == SSL_ERROR_WANT_WRITE){
+		}else if(err == SSL_ERROR_WANT_WRITE){
 			mosq->want_write = true;
 			mosq->want_connect = true;
 		}else{
