@@ -87,7 +87,6 @@ int mqtt3_socket_accept(struct mosquitto_db *db, mosq_sock_t listensock,int epol
 {
 	int i;
 	int j;
-	struct epoll_event event;
 	mosq_sock_t new_sock = INVALID_SOCKET;
 	struct mosquitto *new_context;
 #ifdef WITH_TLS
