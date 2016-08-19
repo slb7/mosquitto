@@ -387,7 +387,7 @@ int _mosquitto_send_suback(struct mosquitto *context, uint16_t mid, uint32_t pay
 /* ============================================================
  * Network functions
  * ============================================================ */
-int mqtt3_socket_accept(struct mosquitto_db *db, mosq_sock_t listensock);
+int mqtt3_socket_accept(struct mosquitto_db *db, mosq_sock_t listensock, int epollrfd, int epollwfd);
 int mqtt3_socket_listen(struct _mqtt3_listener *listener);
 int _mosquitto_socket_get_address(mosq_sock_t sock, char *buf, int len);
 
@@ -447,7 +447,7 @@ int mqtt3_subs_clean_session(struct mosquitto_db *db, struct mosquitto *context)
 /* ============================================================
  * Context functions
  * ============================================================ */
-struct mosquitto *mqtt3_context_init(struct mosquitto_db *db, mosq_sock_t sock);
+struct mosquitto *mqtt3_context_init(struct mosquitto_db *db, mosq_sock_t sock,int epollrfd, int epollwfd);
 void mqtt3_context_cleanup(struct mosquitto_db *db, struct mosquitto *context, bool do_free);
 void mqtt3_context_disconnect(struct mosquitto_db *db, struct mosquitto *context);
 void mosquitto__add_context_to_disused(struct mosquitto_db *db, struct mosquitto *context);

@@ -110,6 +110,8 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 	struct pollfd *pollfds = NULL;
 	int pollfd_count = 0;
 	int pollfd_index;
+	int epollrfd = -1;
+	int epollwfd = -1;
 #ifdef WITH_BRIDGE
 	mosq_sock_t bridge_sock;
 	int rc;
@@ -127,7 +129,10 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 	if(db->config->persistent_client_expiration > 0){
 		expiration_check_time = time(NULL) + 3600;
 	}
-
+    if(epollrfd == -1 || epollwrd == -1) {
+    	epollrfd = epoll_create(-1);
+    	epollwfd = epoll_create(-1);
+    }
 	while(run){
 		mosquitto__free_disused_contexts(db);
 #ifdef WITH_SYS_TREE
@@ -180,7 +185,8 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 							&& context->bridge->cur_address != 0
 							&& now > context->bridge->primary_retry){
 
-						if(_mosquitto_try_connect(context, context->bridge->addresses[0].address, context->bridge->addresses[0].port, &bridge_sock, NULL, false) <= 0){
+						if(_mosquitto_try_connect(context, context->bridge->addresses[0].address, 
+							context->bridge->addresses[0].port, &bridge_sock, NULL, false) <= 0){
 							COMPAT_CLOSE(bridge_sock);
 							_mosquitto_socket_close(db, context);
 							context->bridge->cur_address = context->bridge->address_count-1;
@@ -329,7 +335,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 
 			for(i=0; i<listensock_count; i++){
 				if(pollfds[i].revents & (POLLIN | POLLPRI)){
-					while(mqtt3_socket_accept(db, listensock[i]) != -1){
+					while(mqtt3_socket_accept(db, listensock[i], epollrfd, epollwfd) != -1){
 					}
 				}
 			}

@@ -22,17 +22,26 @@ Contributors:
 #include <mosquitto_broker.h>
 #include <memory_mosq.h>
 #include <time_mosq.h>
+#include <sys/epoll.h>
 
 #include "uthash.h"
 
-struct mosquitto *mqtt3_context_init(struct mosquitto_db *db, mosq_sock_t sock)
+struct mosquitto *mqtt3_context_init(struct mosquitto_db *db, mosq_sock_t sock,int epollrfd, epollwfd)
 {
 	struct mosquitto *context;
 	char address[1024];
 
 	context = _mosquitto_calloc(1, sizeof(struct mosquitto));
 	if(!context) return NULL;
-	
+	struct epoll_event event;
+	event.data.fd = sock;
+	event.data.ptr = context;
+    event.events = EPOLLIN | EPOLLET;
+    int s = epoll_ctl (epollrfd, EPOLL_CTL_ADD, sock, &event);
+    if(!s) return NULL;
+    event.events = EPOLLOUT | EPOLLET;
+    int s = epoll_ctl (epollwfd, EPOLL_CTL_ADD, sock, &event);
+    if(!s) return NULL;
 	context->state = mosq_cs_new;
 	context->sock = sock;
 	context->last_msg_in = mosquitto_time();

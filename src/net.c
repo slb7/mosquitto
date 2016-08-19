@@ -83,10 +83,11 @@ static void net__print_error(int log, const char *format_str)
 }
 
 
-int mqtt3_socket_accept(struct mosquitto_db *db, mosq_sock_t listensock)
+int mqtt3_socket_accept(struct mosquitto_db *db, mosq_sock_t listensock,int epollrfd, int epollwfd)
 {
 	int i;
 	int j;
+	struct epoll_event event;
 	mosq_sock_t new_sock = INVALID_SOCKET;
 	struct mosquitto *new_context;
 #ifdef WITH_TLS
@@ -124,7 +125,7 @@ int mqtt3_socket_accept(struct mosquitto_db *db, mosq_sock_t listensock)
 		return -1;
 	}
 #endif
-	new_context = mqtt3_context_init(db, new_sock);
+	new_context = mqtt3_context_init(db, new_sock, epollrfd, epollwfd);
 	if(!new_context){
 		COMPAT_CLOSE(new_sock);
 		return -1;
