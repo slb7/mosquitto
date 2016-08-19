@@ -129,7 +129,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 	if(db->config->persistent_client_expiration > 0){
 		expiration_check_time = time(NULL) + 3600;
 	}
-    if(epollrfd == -1 || epollwrd == -1) {
+    if(epollrfd == -1 || epollwfd == -1) {
     	epollrfd = epoll_create(-1);
     	epollwfd = epoll_create(-1);
     }
