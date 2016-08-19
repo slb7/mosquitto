@@ -42,7 +42,7 @@ struct mosquitto *mqtt3_context_init(struct mosquitto_db *db, mosq_sock_t sock,i
     event.events = EPOLLOUT | EPOLLET;
     s = epoll_ctl (epollwfd, EPOLL_CTL_ADD, sock, &event);
     if(s == -1 ) return NULL;
-    printf("sucessfully added to epolfds\n")
+    printf("sucessfully added to epolfds\n");
 	context->state = mosq_cs_new;
 	context->sock = sock;
 	context->last_msg_in = mosquitto_time();
