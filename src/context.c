@@ -26,7 +26,7 @@ Contributors:
 
 #include "uthash.h"
 
-struct mosquitto *mqtt3_context_init(struct mosquitto_db *db, mosq_sock_t sock,int epollrfd, epollwfd)
+struct mosquitto *mqtt3_context_init(struct mosquitto_db *db, mosq_sock_t sock,int epollrfd, int epollwfd)
 {
 	struct mosquitto *context;
 	char address[1024];
