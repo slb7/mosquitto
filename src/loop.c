@@ -134,6 +134,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
     	epollwfd = epoll_create(-1);
     }
 	while(run){
+		printf("hello\n");
 		mosquitto__free_disused_contexts(db);
 #ifdef WITH_SYS_TREE
 		if(db->config->sys_interval > 0){
