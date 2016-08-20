@@ -130,11 +130,10 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		expiration_check_time = time(NULL) + 3600;
 	}
     if(epollrfd == -1 || epollwfd == -1) {
-    	epollrfd = epoll_create(-1);
-    	epollwfd = epoll_create(-1);
+    	epollrfd = epoll_create(1);
+    	epollwfd = epoll_create(1);
     }
 	while(run){
-		printf("hello\n");
 		mosquitto__free_disused_contexts(db);
 #ifdef WITH_SYS_TREE
 		if(db->config->sys_interval > 0){
