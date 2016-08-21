@@ -461,6 +461,7 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 	socklen_t len;
 	int i;
 	for(i=0;i<rcount;i++) {
+		context = revents[i].data.ptr;
 		do{
 			if(_mosquitto_packet_read(db, context)){
 				do_disconnect(db, context);
