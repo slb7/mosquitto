@@ -335,9 +335,9 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		fdcount = poll(pollfds, pollfd_index, 100);
 		int readcount = epoll_wait(epollrfd, revents, MAX_EVENTS, 1000);
 		int writecount = epoll_wait(epollwfd, wevents, MAX_EVENTS, 1000);
-		//if(readcount || writecount) {
+		if(readcount || writecount) {
 			printf("read=%d write=%d\n",readcount,writecount);
-		//}
+		}
 		sigprocmask(SIG_SETMASK, &origsig, NULL);
 #else
 		fdcount = WSAPoll(pollfds, pollfd_index, 100);
