@@ -343,18 +343,21 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		fdcount = WSAPoll(pollfds, pollfd_index, 100);
 #endif
 		//if(fdcount == -1){
-		if(readcount == 0 && writecount == 0 && fdcount == -1) {
+		if(readcount == 0 && writecount == 0) {
 			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error in poll: %s.", strerror(errno));
 		}else{
 			//loop_handle_reads_writes(db, pollfds);
 			loop_handle_reads_writesx(db, revents, wevents, readcount, writecount);
-
+		}
+		if(fdcount == -1) {
+			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error in poll: %s.", strerror(errno));
+		} else {
 			for(i=0; i<listensock_count; i++){
 				if(pollfds[i].revents & (POLLIN | POLLPRI)){
 					while(mqtt3_socket_accept(db, listensock[i], epollrfd, epollwfd) != -1){
 					}
 				}
-			}
+			}			
 		}
 #ifdef WITH_PERSISTENCE
 		if(db->config->persistence && db->config->autosave_interval){
