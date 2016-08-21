@@ -453,6 +453,98 @@ void do_disconnect(struct mosquitto_db *db, struct mosquitto *context)
 	}
 }
 
+static void loop_handle_reads_writesx(struct epoll_event *revents,struct epoll_event *wevents, int rcount, int wcount)
+{
+	struct mosquitto *context, *ctxt_tmp;
+	int err;
+	socklen_t len;
+	int i;
+	for(i=0;i<rcount;i++) {
+		do{
+			if(_mosquitto_packet_read(db, context)){
+				do_disconnect(db, context);
+				continue;
+			}
+		}while(SSL_DATA_PENDING(context));		
+	}
+	for(i=0;i<wcount;i++) {
+		context = wevents.data.ptr;
+		if(context->want_write ||
+				(context->ssl && context->state == mosq_cs_new)) {
+			if(context->state == mosq_cs_connect_pending){
+				len = sizeof(int);
+				if(!getsockopt(context->sock, SOL_SOCKET, SO_ERROR, (char *)&err, &len)){
+					if(err == 0){
+						context->state = mosq_cs_new;
+					}
+				}else{
+					do_disconnect(db, context);
+					continue;
+				}
+			}
+			if(_mosquitto_packet_write(context)){
+				do_disconnect(db, context);
+				continue;
+			}
+		}
+
+	}
+	return;
+	HASH_ITER(hh_sock, db->contexts_by_sock, context, ctxt_tmp){
+		if(context->pollfd_index < 0){
+			continue;
+		}
+
+		assert(pollfds[context->pollfd_index].fd == context->sock);
+#ifdef WITH_TLS
+		if(pollfds[context->pollfd_index].revents & POLLOUT ||
+				context->want_write ||
+				(context->ssl && context->state == mosq_cs_new)){
+#else
+		if(pollfds[context->pollfd_index].revents & POLLOUT){
+#endif
+			if(context->state == mosq_cs_connect_pending){
+				len = sizeof(int);
+				if(!getsockopt(context->sock, SOL_SOCKET, SO_ERROR, (char *)&err, &len)){
+					if(err == 0){
+						context->state = mosq_cs_new;
+					}
+				}else{
+					do_disconnect(db, context);
+					continue;
+				}
+			}
+			if(_mosquitto_packet_write(context)){
+				do_disconnect(db, context);
+				continue;
+			}
+		}
+	}
+
+	HASH_ITER(hh_sock, db->contexts_by_sock, context, ctxt_tmp){
+		if(context->pollfd_index < 0){
+			continue;
+		}
+
+#ifdef WITH_TLS
+		if(pollfds[context->pollfd_index].revents & POLLIN ||
+				(context->ssl && context->state == mosq_cs_new)){
+#else
+		if(pollfds[context->pollfd_index].revents & POLLIN){
+#endif
+			do{
+				if(_mosquitto_packet_read(db, context)){
+					do_disconnect(db, context);
+					continue;
+				}
+			}while(SSL_DATA_PENDING(context));
+		}
+		if(pollfds[context->pollfd_index].revents & (POLLERR | POLLNVAL | POLLHUP)){
+			do_disconnect(db, context);
+			continue;
+		}
+	}
+}
 
 static void loop_handle_reads_writes(struct mosquitto_db *db, struct pollfd *pollfds)
 {
