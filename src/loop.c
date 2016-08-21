@@ -57,7 +57,8 @@ extern int run;
 #ifdef WITH_SYS_TREE
 extern int g_clients_expired;
 #endif
-struct epoll_event *events = NULL;
+struct epoll_event *revents = NULL;
+struct epoll_event *wevents = NULL;
 #define MAX_EVENTS 8192
 static void loop_handle_reads_writes(struct mosquitto_db *db, struct pollfd *pollfds);
 
@@ -93,9 +94,14 @@ static void temp__expire_websockets_clients(struct mosquitto_db *db)
 
 int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int listensock_count, int listener_max)
 {
-	if(!events) {
-		events = (struct epoll_event *)malloc(MAX_EVENTS * sizeof(struct epoll_event));
+	if(revents == NULL || wevents == NULL) {
+		revents = (struct epoll_event *)malloc(MAX_EVENTS * sizeof(struct epoll_event));
+		wevents = (struct epoll_event *)malloc(MAX_EVENTS * sizeof(struct epoll_event));
 	}
+    if(epollrfd == -1 || epollwfd == -1) {
+    	epollrfd = epoll_create(1);
+    	epollwfd = epoll_create(1);
+    }
 #ifdef WITH_SYS_TREE
 	time_t start_time = mosquitto_time();
 #endif
@@ -133,10 +139,6 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 	if(db->config->persistent_client_expiration > 0){
 		expiration_check_time = time(NULL) + 3600;
 	}
-    if(epollrfd == -1 || epollwfd == -1) {
-    	epollrfd = epoll_create(1);
-    	epollwfd = epoll_create(1);
-    }
 	while(run){
 		mosquitto__free_disused_contexts(db);
 #ifdef WITH_SYS_TREE
@@ -328,8 +330,8 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 #ifndef WIN32
 		sigprocmask(SIG_SETMASK, &sigblock, &origsig);
 		fdcount = poll(pollfds, pollfd_index, 100);
-		int readcount = epoll_wait(epollrfd, events, MAX_EVENTS, 0);
-		int writecount = epoll_wait(epollwfd, events, MAX_EVENTS, 0);
+		int readcount = epoll_wait(epollrfd, events, MAX_EVENTS, 1000);
+		int writecount = epoll_wait(epollwfd, events, MAX_EVENTS, 1000);
 		if(readcount || writecount) {
 			printf("read=%d write=%d\n",readcount,writecount);
 		}
@@ -337,10 +339,12 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 #else
 		fdcount = WSAPoll(pollfds, pollfd_index, 100);
 #endif
-		if(fdcount == -1){
+		//if(fdcount == -1){
+		if(readcount == 0 && writecount == 0) {
 			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error in poll: %s.", strerror(errno));
 		}else{
-			loop_handle_reads_writes(db, pollfds);
+			//loop_handle_reads_writes(db, pollfds);
+			loop_handle_reads_writesx(db, revents, wevents, readcount, writecount);
 
 			for(i=0; i<listensock_count; i++){
 				if(pollfds[i].revents & (POLLIN | POLLPRI)){
