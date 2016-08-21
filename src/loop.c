@@ -57,8 +57,6 @@ extern int run;
 #ifdef WITH_SYS_TREE
 extern int g_clients_expired;
 #endif
-struct epoll_event *revents = NULL;
-struct epoll_event *wevents = NULL;
 #define MAX_EVENTS 8192
 static void loop_handle_reads_writes(struct mosquitto_db *db, struct pollfd *pollfds);
 
@@ -94,6 +92,11 @@ static void temp__expire_websockets_clients(struct mosquitto_db *db)
 
 int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int listensock_count, int listener_max)
 {
+	static int epollrfd = -1;
+	static int epollwfd = -1;
+	static struct epoll_event *revents = NULL;
+	static struct epoll_event *wevents = NULL;
+
 	if(revents == NULL || wevents == NULL) {
 		revents = (struct epoll_event *)malloc(MAX_EVENTS * sizeof(struct epoll_event));
 		wevents = (struct epoll_event *)malloc(MAX_EVENTS * sizeof(struct epoll_event));
@@ -120,8 +123,6 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 	struct pollfd *pollfds = NULL;
 	int pollfd_count = 0;
 	int pollfd_index;
-	int epollrfd = -1;
-	int epollwfd = -1;
 #ifdef WITH_BRIDGE
 	mosq_sock_t bridge_sock;
 	int rc;
