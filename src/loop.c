@@ -453,7 +453,7 @@ void do_disconnect(struct mosquitto_db *db, struct mosquitto *context)
 	}
 }
 
-static void loop_handle_reads_writesx(struct epoll_event *revents,struct epoll_event *wevents, int rcount, int wcount)
+static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_event *revents,struct epoll_event *wevents, int rcount, int wcount)
 {
 	struct mosquitto *context, *ctxt_tmp;
 	int err;
