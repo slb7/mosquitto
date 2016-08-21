@@ -59,6 +59,8 @@ extern int g_clients_expired;
 #endif
 #define MAX_EVENTS 8192
 static void loop_handle_reads_writes(struct mosquitto_db *db, struct pollfd *pollfds);
+static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_event* revents, struct epoll_event * wevents,
+	int readcount, int writecount);
 
 #ifdef WITH_WEBSOCKETS
 static void temp__expire_websockets_clients(struct mosquitto_db *db)
@@ -331,8 +333,8 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 #ifndef WIN32
 		sigprocmask(SIG_SETMASK, &sigblock, &origsig);
 		fdcount = poll(pollfds, pollfd_index, 100);
-		int readcount = epoll_wait(epollrfd, events, MAX_EVENTS, 1000);
-		int writecount = epoll_wait(epollwfd, events, MAX_EVENTS, 1000);
+		int readcount = epoll_wait(epollrfd, revents, MAX_EVENTS, 1000);
+		int writecount = epoll_wait(epollwfd, wevents, MAX_EVENTS, 1000);
 		if(readcount || writecount) {
 			printf("read=%d write=%d\n",readcount,writecount);
 		}
