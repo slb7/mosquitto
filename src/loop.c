@@ -469,7 +469,7 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 		}while(SSL_DATA_PENDING(context));		
 	}
 	for(i=0;i<wcount;i++) {
-		context = wevents.data.ptr;
+		context = wevents[i].data.ptr;
 		if(context->want_write ||
 				(context->ssl && context->state == mosq_cs_new)) {
 			if(context->state == mosq_cs_connect_pending){
