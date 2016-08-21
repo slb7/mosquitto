@@ -453,7 +453,8 @@ void do_disconnect(struct mosquitto_db *db, struct mosquitto *context)
 	}
 }
 
-static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_event *revents,struct epoll_event *wevents, int rcount, int wcount)
+static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_event *revents,
+	struct epoll_event *wevents, int rcount, int wcount)
 {
 	struct mosquitto *context, *ctxt_tmp;
 	int err;
@@ -490,6 +491,7 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 
 	}
 	return;
+#ifdef DONOTDEFINE
 	HASH_ITER(hh_sock, db->contexts_by_sock, context, ctxt_tmp){
 		if(context->pollfd_index < 0){
 			continue;
@@ -544,6 +546,7 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 			continue;
 		}
 	}
+#endif
 }
 
 static void loop_handle_reads_writes(struct mosquitto_db *db, struct pollfd *pollfds)
