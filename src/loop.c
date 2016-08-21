@@ -328,8 +328,8 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 #ifndef WIN32
 		sigprocmask(SIG_SETMASK, &sigblock, &origsig);
 		fdcount = poll(pollfds, pollfd_index, 100);
-		int readcount = epoll_wait(epollrfd,events,0);
-		int writecount = epoll_wait(epollwfd,events,MAX_EVENTS,0);
+		int readcount = epoll_wait(epollrfd, events, MAX_EVENTS, 0);
+		int writecount = epoll_wait(epollwfd, events, MAX_EVENTS, 0);
 		if(readcount || writecount) {
 			printf("read=%d write=%d\n",readcount,writecount);
 		}
