@@ -93,6 +93,12 @@ static void temp__expire_websockets_clients(struct mosquitto_db *db)
 
 int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int listensock_count, int listener_max)
 {
+	if(!events) {
+		events = (struct epoll_event *)malloc(MAX_EVENTS * sizeof(struct epoll_event));
+		{
+			/* data */
+		};))
+	}
 #ifdef WITH_SYS_TREE
 	time_t start_time = mosquitto_time();
 #endif
@@ -326,7 +332,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		sigprocmask(SIG_SETMASK, &sigblock, &origsig);
 		fdcount = poll(pollfds, pollfd_index, 100);
 		int readcount = epoll_wait(epollrfd,events,0);
-		int writecount = epoll_wait(epollwfd,events,MAXEVENTS,0);
+		int writecount = epoll_wait(epollwfd,events,MAX_EVENTS,0);
 		if(readcount || writecount) {
 			printf("read=%d write=%d\n",readcount,writecount);
 		}
