@@ -95,9 +95,6 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 {
 	if(!events) {
 		events = (struct epoll_event *)malloc(MAX_EVENTS * sizeof(struct epoll_event));
-		{
-			/* data */
-		};))
 	}
 #ifdef WITH_SYS_TREE
 	time_t start_time = mosquitto_time();
