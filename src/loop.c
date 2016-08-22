@@ -58,9 +58,11 @@ extern int run;
 extern int g_clients_expired;
 #endif
 #define MAX_EVENTS 8192
+#define LISTENERPTR 0xCAFEF00D
 static void loop_handle_reads_writes(struct mosquitto_db *db, struct pollfd *pollfds);
 static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_event* revents, struct epoll_event * wevents,
 	int readcount, int writecount);
+static bool listernersAdded = false;
 
 #ifdef WITH_WEBSOCKETS
 static void temp__expire_websockets_clients(struct mosquitto_db *db)
@@ -333,6 +335,16 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 #ifndef WIN32
 		sigprocmask(SIG_SETMASK, &sigblock, &origsig);
 		fdcount = poll(pollfds, pollfd_index, 100);
+		if(!listernersAdded) {
+			for(i=0;i<listensock_count;i++) {
+				printf("listensock added %d",)
+				event.data.fd = listensock[i];
+				event.data.ptr = LISTENERPTR;
+			    event.events = EPOLLIN | EPOLLET;
+			    int s = epoll_ctl (epollrfd, EPOLL_CTL_ADD, listensock[i], &event);
+			}
+			listernersAdded = true;
+		}
 		int readcount = epoll_wait(epollrfd, revents, MAX_EVENTS, 1000);
 		int writecount = epoll_wait(epollwfd, wevents, MAX_EVENTS, 1000);
 		if(readcount || writecount) {
@@ -352,12 +364,12 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		if(fdcount == -1) {
 			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error in poll: %s.", strerror(errno));
 		} else {
-			for(i=0; i<listensock_count; i++){
-				if(pollfds[i].revents & (POLLIN | POLLPRI)){
-					while(mqtt3_socket_accept(db, listensock[i], epollrfd, epollwfd) != -1){
-					}
-				}
-			}			
+			// for(i=0; i<listensock_count; i++){
+			// 	if(pollfds[i].revents & (POLLIN | POLLPRI)){
+			// 		while(mqtt3_socket_accept(db, listensock[i], epollrfd, epollwfd) != -1){
+			// 		}
+			// 	}
+			// }			
 		}
 #ifdef WITH_PERSISTENCE
 		if(db->config->persistence && db->config->autosave_interval){
@@ -472,12 +484,18 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 	int i;
 	for(i=0;i<rcount;i++) {
 		context = revents[i].data.ptr;
-		do{
-			if(_mosquitto_packet_read(db, context)){
-				do_disconnect(db, context);
-				continue;
+		if(context == LISTENERPTR) {
+			printf("listener event\n")
+			while(mqtt3_socket_accept(db, listensock[i], epollrfd, epollwfd) != -1){
 			}
-		}while(SSL_DATA_PENDING(context));		
+		} else {
+			do{
+				if(_mosquitto_packet_read(db, context)){
+					do_disconnect(db, context);
+					continue;
+				}
+			}while(SSL_DATA_PENDING(context));
+		}
 	}
 	for(i=0;i<wcount;i++) {
 		context = wevents[i].data.ptr;
