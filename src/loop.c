@@ -360,7 +360,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error in poll: %s.", strerror(errno));
 		}else{
 			//loop_handle_reads_writes(db, pollfds);
-			loop_handle_reads_writesx(db, revents, wevents, readcount, writecount);
+			loop_handle_reads_writesx(db, revents, wevents, readcount, writecount, epollrfd, epollwfd);
 		}
 		if(fdcount == -1) {
 			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error in poll: %s.", strerror(errno));
@@ -477,7 +477,7 @@ void do_disconnect(struct mosquitto_db *db, struct mosquitto *context)
 }
 
 static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_event *revents,
-	struct epoll_event *wevents, int rcount, int wcount)
+	struct epoll_event *wevents, int rcount, int wcount, int epollrfd, int epollwfd)
 {
 	struct mosquitto *context, *ctxt_tmp;
 	int err;
