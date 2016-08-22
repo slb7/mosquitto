@@ -473,7 +473,7 @@ void do_disconnect(struct mosquitto_db *db, struct mosquitto *context)
 				_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Socket error on client %s, disconnecting.", id);
 			}else{
 				_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Client %s disconnected.", id);
-				printf("disconnect!!!!!!!!!!!!!!!")
+				printf("disconnect!!!!!!!!!!!!!!!");
 			}
 		}
 		mqtt3_context_disconnect(db, context);
