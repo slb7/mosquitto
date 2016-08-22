@@ -338,11 +338,17 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		if(!listernersAdded) {
 			for(i=0;i<listensock_count;i++) {
 				struct epoll_event event;
-				printf("listensock added %d\n",listensock[i]);
-				event.data.fd = listensock[i];
+				int fd = listensock[i];
+				printf("listensock adding %d\n",fd);
+				event.data.fd = fd;
 				event.data.ptr = LISTENERPTR;
 			    event.events = EPOLLIN | EPOLLET;
-			    int s = epoll_ctl (epollrfd, EPOLL_CTL_ADD, listensock[i], &event);
+			    int s = epoll_ctl (epollrfd, EPOLL_CTL_ADD, fd, &event);
+			    if(s) {
+			    	printf("unsuccessful add fd=%d\n",fd);
+			    } else {
+			    	printf("successful add fd=%d\n",fd);
+			    }
 			}
 			listernersAdded = true;
 		}
