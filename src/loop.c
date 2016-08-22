@@ -486,7 +486,7 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 	for(i=0;i<rcount;i++) {
 		context = revents[i].data.ptr;
 		if(context == LISTENERPTR) {
-			printf("listener event\n")
+			printf("listener event\n");
 			while(mqtt3_socket_accept(db, listensock[i], epollrfd, epollwfd) != -1){
 			}
 		} else {
