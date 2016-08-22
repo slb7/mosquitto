@@ -490,6 +490,7 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 			while(mqtt3_socket_accept(db, revents[i].data.fd, epollrfd, epollwfd) != -1){
 			}
 		} else {
+			printf("read event %d\n", context->sock);
 			do{
 				if(_mosquitto_packet_read(db, context)){
 					do_disconnect(db, context);
