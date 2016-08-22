@@ -60,8 +60,7 @@ extern int g_clients_expired;
 #define MAX_EVENTS 8192
 #define LISTENERPTR NULL
 static void loop_handle_reads_writes(struct mosquitto_db *db, struct pollfd *pollfds);
-static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_event* revents, struct epoll_event * wevents,
-	int readcount, int writecount, int epollrfd, int epollwfd);
+static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_event* events, int count, int epollfd);
 static bool listernersAdded = false;
 
 #ifdef WITH_WEBSOCKETS
@@ -96,18 +95,18 @@ static void temp__expire_websockets_clients(struct mosquitto_db *db)
 
 int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int listensock_count, int listener_max)
 {
-	static int epollrfd = -1;
-	static int epollwfd = -1;
-	static struct epoll_event *revents = NULL;
-	static struct epoll_event *wevents = NULL;
+	static int epollfd = -1;
+	//static int epollwfd = -1;
+	static struct epoll_event *events = NULL;
+	//static struct epoll_event *wevents = NULL;
 
-	if(revents == NULL || wevents == NULL) {
-		revents = (struct epoll_event *)malloc(MAX_EVENTS * sizeof(struct epoll_event));
-		wevents = (struct epoll_event *)malloc(MAX_EVENTS * sizeof(struct epoll_event));
+	if(events == NULL) {
+		events = (struct epoll_event *)malloc(MAX_EVENTS * sizeof(struct epoll_event));
+		// wevents = (struct epoll_event *)malloc(MAX_EVENTS * sizeof(struct epoll_event));
 	}
-    if(epollrfd == -1 || epollwfd == -1) {
+    if(epollfd == -1) {
     	epollrfd = epoll_create(1);
-    	epollwfd = epoll_create(1);
+    	//epollwfd = epoll_create(1);
     }
 #ifdef WITH_SYS_TREE
 	time_t start_time = mosquitto_time();
@@ -354,7 +353,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 			}
 			listernersAdded = true;
 		}
-		int readcount = epoll_wait(epollrfd, revents, MAX_EVENTS, 1000);
+		int count = epoll_wait(epollfd, events, MAX_EVENTS, 1000);
 		for(i=0;i<readcount;i++) {
 			struct mosquitto_epoll_event_data *d = revents[i].data.ptr;
 			if(d->isListener) {
@@ -377,7 +376,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error in poll: %s.", strerror(errno));
 		}else{
 			//loop_handle_reads_writes(db, pollfds);
-			loop_handle_reads_writesx(db, revents, wevents, readcount, 0, epollrfd, epollwfd);
+			loop_handle_reads_writesx(db, events, count, epollfd);
 		}
 		if(fdcount == -1) {
 			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error in poll: %s.", strerror(errno));
@@ -493,22 +492,22 @@ void do_disconnect(struct mosquitto_db *db, struct mosquitto *context)
 	}
 }
 
-static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_event *revents,
-	struct epoll_event *wevents, int rcount, int wcount, int epollrfd, int epollwfd)
+static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_event *events,
+	int count, int epollfd)
 {
 	struct mosquitto *context, *ctxt_tmp;
 	int err;
 	socklen_t len;
 	int i;
 	for(i=0;i<rcount;i++) {
-		struct mosquitto_epoll_event_data *d = revents[i].data.ptr;
+		struct mosquitto_epoll_event_data *d = events[i].data.ptr;
 		if(d->isListener) {
 			printf("listener event fd=%d\n",d->fd);
-			while(mqtt3_socket_accept(db, d->fd, epollrfd, epollwfd) != -1){
+			while(mqtt3_socket_accept(db, d->fd, epollfd, 0) != -1){
 			}
 		} else {
 			context = d->context;
-			if(revents[i].events & EPOLLIN) {
+			if(events[i].events & EPOLLIN) {
 				printf("read event %d\n", context->sock);
 				do{
 					if(_mosquitto_packet_read(db, context)){
@@ -517,7 +516,7 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 					}
 				}while(SSL_DATA_PENDING(context));
 			}
-			if(revents[i].events & EPOLLOUT) {
+			if(events[i].events & EPOLLOUT) {
 				printf("caught an EPOLLOUT event!\n");
 				context = d->context;
 				if(context->want_write ||
