@@ -508,13 +508,18 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 			}
 		} else {
 			context = d->context;
-			printf("read event %d\n", context->sock);
-			do{
-				if(_mosquitto_packet_read(db, context)){
-					do_disconnect(db, context);
-					continue;
-				}
-			}while(SSL_DATA_PENDING(context));
+			if(revents[i].events & EPOLLIN) {
+				printf("read event %d\n", context->sock);
+				do{
+					if(_mosquitto_packet_read(db, context)){
+						do_disconnect(db, context);
+						continue;
+					}
+				}while(SSL_DATA_PENDING(context));
+			}
+			if(revents[i].events & EPOLLOUT) {
+				printf("caught an EPOLLOUT event!\n")
+			}
 		}
 	}
 	for(i=0;i<wcount;i++) {
