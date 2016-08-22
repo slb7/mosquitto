@@ -5,7 +5,7 @@
 # line utility including the "-i" option.
 
 set(CMAKE_LEGACY_CYGWIN_WIN32 0)
-
+set(CMAKE_BUILD_TYPE Debug)
 project(mosquitto)
 
 cmake_minimum_required(VERSION 2.8)

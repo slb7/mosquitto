@@ -13,7 +13,7 @@
 #
 # make WITH_TLS=no
 # =============================================================================
-
+DEBUG:=yes
 # Uncomment to compile the broker with tcpd/libwrap support.
 #WITH_WRAP:=yes
 
@@ -105,7 +105,7 @@ ifeq ($(UNAME),SunOS)
 		CFLAGS?=-Wall -ggdb -O2
 	endif
 else
-	CFLAGS?=-Wall -ggdb -O2
+	CFLAGS?=-Wall -ggdb -O2 -g
 endif
 
 LIB_CFLAGS:=${CFLAGS} ${CPPFLAGS} -I. -I.. -I../lib
