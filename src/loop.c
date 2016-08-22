@@ -373,7 +373,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		fdcount = WSAPoll(pollfds, pollfd_index, 100);
 #endif
 		//if(fdcount == -1){
-		if(readcount == 0 && writecount == 0) {
+		if(readcount == -1) {
 			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error in poll: %s.", strerror(errno));
 		}else{
 			//loop_handle_reads_writes(db, pollfds);
