@@ -338,7 +338,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		if(!listernersAdded) {
 			for(i=0;i<listensock_count;i++) {
 				struct epoll_event event;
-				printf("listensock added %d",listensock[i]);
+				printf("listensock added %d\n",listensock[i]);
 				event.data.fd = listensock[i];
 				event.data.ptr = LISTENERPTR;
 			    event.events = EPOLLIN | EPOLLET;
@@ -486,7 +486,7 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 	for(i=0;i<rcount;i++) {
 		context = revents[i].data.ptr;
 		if(context == LISTENERPTR) {
-			printf("listener event\n");
+			printf("listener event fd=%d\n",revents[i].data.fd);
 			while(mqtt3_socket_accept(db, revents[i].data.fd, epollrfd, epollwfd) != -1){
 			}
 		} else {
