@@ -344,7 +344,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 				d->fd = fd;
 				d->isListener = true;
 			    event.events = EPOLLIN | EPOLLET;
-			    int s = epoll_ctl (epollrfd, EPOLL_CTL_ADD, fd, &event);
+			    int s = epoll_ctl (epollfd, EPOLL_CTL_ADD, fd, &event);
 			    if(s) {
 			    	printf("unsuccessful add fd=%d\n",fd);
 			    } else {
@@ -372,7 +372,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		fdcount = WSAPoll(pollfds, pollfd_index, 100);
 #endif
 		//if(fdcount == -1){
-		if(readcount == -1) {
+		if(count == -1) {
 			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error in poll: %s.", strerror(errno));
 		}else{
 			//loop_handle_reads_writes(db, pollfds);
@@ -499,7 +499,7 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 	int err;
 	socklen_t len;
 	int i;
-	for(i=0;i<rcount;i++) {
+	for(i=0;i<count;i++) {
 		struct mosquitto_epoll_event_data *d = events[i].data.ptr;
 		if(d->isListener) {
 			printf("listener event fd=%d\n",d->fd);
