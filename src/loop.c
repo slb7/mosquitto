@@ -371,12 +371,12 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		if(fdcount == -1) {
 			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error in poll: %s.", strerror(errno));
 		} else {
-			// for(i=0; i<listensock_count; i++){
-			// 	if(pollfds[i].revents & (POLLIN | POLLPRI)){
-			// 		while(mqtt3_socket_accept(db, listensock[i], epollrfd, epollwfd) != -1){
-			// 		}
-			// 	}
-			// }			
+			for(i=0; i<listensock_count; i++){
+				if(pollfds[i].revents & (POLLIN | POLLPRI)){
+					while(mqtt3_socket_accept(db, listensock[i], epollrfd, epollwfd) != -1){
+					}
+				}
+			}			
 		}
 #ifdef WITH_PERSISTENCE
 		if(db->config->persistence && db->config->autosave_interval){
@@ -493,8 +493,8 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 		context = revents[i].data.ptr;
 		if(context == LISTENERPTR) {
 			printf("listener event fd=%d\n",revents[i].data.fd);
-			while(mqtt3_socket_accept(db, revents[i].data.fd, epollrfd, epollwfd) != -1){
-			}
+			// while(mqtt3_socket_accept(db, revents[i].data.fd, epollrfd, epollwfd) != -1){
+			// }
 		} else {
 			printf("read event %d\n", context->sock);
 			do{
