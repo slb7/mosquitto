@@ -353,6 +353,9 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 			listernersAdded = true;
 		}
 		int readcount = epoll_wait(epollrfd, revents, MAX_EVENTS, 1000);
+		for(i=0;i<readcount;i++) {
+			printf("event occurred on %d\n",revents[i].data.fd);
+		}
 		int writecount = epoll_wait(epollwfd, wevents, MAX_EVENTS, 1000);
 		if(readcount || writecount) {
 			printf("read=%d write=%d\n",readcount,writecount);
