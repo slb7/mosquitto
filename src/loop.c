@@ -105,7 +105,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		// wevents = (struct epoll_event *)malloc(MAX_EVENTS * sizeof(struct epoll_event));
 	}
     if(epollfd == -1) {
-    	epollrfd = epoll_create(1);
+    	epollfd = epoll_create(1);
     	//epollwfd = epoll_create(1);
     }
 #ifdef WITH_SYS_TREE
@@ -354,8 +354,8 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 			listernersAdded = true;
 		}
 		int count = epoll_wait(epollfd, events, MAX_EVENTS, 1000);
-		for(i=0;i<readcount;i++) {
-			struct mosquitto_epoll_event_data *d = revents[i].data.ptr;
+		for(i=0;i<count;i++) {
+			struct mosquitto_epoll_event_data *d = events[i].data.ptr;
 			if(d->isListener) {
 				printf("listener event occurred on %d\n",d->fd);
 			} else {
