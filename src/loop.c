@@ -340,10 +340,11 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 				int fd = listensock[i];
 				printf("listensock adding %d\n",fd);
 				struct mosquitto_epoll_event_data *d = malloc(sizeof(struct mosquitto_epoll_event_data)); //this is a leak (kinda)!
-				event.data.ptr = d;
-				d->fd = fd;
-				d->isListener = true;
-			    event.events = EPOLLIN | EPOLLET;
+				context = _mosquitto_calloc(1, sizeof(struct mosquitto));
+				context->is_listener = true;
+				context->sock = fd;
+				event.data.ptr = context;
+\			    event.events = EPOLLIN | EPOLLET;
 			    int s = epoll_ctl (epollfd, EPOLL_CTL_ADD, fd, &event);
 			    if(s) {
 			    	printf("unsuccessful add fd=%d\n",fd);

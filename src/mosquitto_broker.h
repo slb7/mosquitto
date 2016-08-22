@@ -66,11 +66,6 @@ enum mosquitto_protocol {
 	mp_mqttsn,
 	mp_websockets
 };
-struct mosquitto_epoll_event_data {
-	struct mosquitto *context;
-	int fd;
-	bool isListener;
-};
 
 typedef uint64_t dbid_t;
 

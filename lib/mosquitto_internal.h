@@ -198,6 +198,7 @@ struct mosquitto {
 #endif
 	bool clean_session;
 #ifdef WITH_BROKER
+	bool is_listener;
 	bool is_dropping;
 	bool is_bridge;
 	struct _mqtt3_bridge *bridge;
