@@ -61,7 +61,7 @@ extern int g_clients_expired;
 #define LISTENERPTR NULL
 static void loop_handle_reads_writes(struct mosquitto_db *db, struct pollfd *pollfds);
 static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_event* revents, struct epoll_event * wevents,
-	int readcount, int writecount);
+	int readcount, int writecount, int epollrfd, int epollwfd);
 static bool listernersAdded = false;
 
 #ifdef WITH_WEBSOCKETS
