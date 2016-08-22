@@ -339,7 +339,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 				struct epoll_event event;
 				int fd = listensock[i];
 				printf("listensock adding %d\n",fd);
-				struct mosquitto_epoll_event_data *d = malloc(sizeof(struct mosquitto_epoll_event_data)); //this is a leak (kinda)!
+				//struct mosquitto_epoll_event_data *d = malloc(sizeof(struct mosquitto_epoll_event_data)); //this is a leak (kinda)!
 				context = _mosquitto_calloc(1, sizeof(struct mosquitto));
 				context->is_listener = true;
 				context->sock = fd;
@@ -356,9 +356,9 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		}
 		int count = epoll_wait(epollfd, events, MAX_EVENTS, 1000);
 		for(i=0;i<count;i++) {
-			struct mosquitto_epoll_event_data *d = events[i].data.ptr;
-			if(d->isListener) {
-				printf("listener event occurred on %d\n",d->fd);
+			struct mosquitto *context = events[i].data.ptr;
+			if(context->isListener) {
+				printf("listener event occurred on %d\n",context->fd);
 			} else {
 				printf("context read event occured\n");
 			}
@@ -502,13 +502,12 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 	socklen_t len;
 	int i;
 	for(i=0;i<count;i++) {
-		struct mosquitto_epoll_event_data *d = events[i].data.ptr;
-		if(d->isListener) {
-			printf("listener event fd=%d\n",d->fd);
-			while(mqtt3_socket_accept(db, d->fd, epollfd, 0) != -1){
+		struct mosquitto *context = events[i].data.ptr;
+		if(context->isListener) {
+			printf("listener event fd=%d\n",context->sock);
+			while(mqtt3_socket_accept(db, context->sock, epollfd, 0) != -1){
 			}
 		} else {
-			context = d->context;
 			if(events[i].events & EPOLLIN) {
 				printf("read event %d\n", context->sock);
 				do{
@@ -521,7 +520,6 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 			}
 			if(events[i].events & EPOLLOUT) {
 				printf("caught an EPOLLOUT event!\n");
-				context = d->context;
 				if(context->want_write ||
 						(context->ssl && context->state == mosq_cs_new)) {
 					if(context->state == mosq_cs_connect_pending){
