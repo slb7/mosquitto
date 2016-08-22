@@ -383,10 +383,10 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error in poll: %s.", strerror(errno));
 		} else {
 			for(i=0; i<listensock_count; i++){
-				if(pollfds[i].revents & (POLLIN | POLLPRI)){
-					while(mqtt3_socket_accept(db, listensock[i], epollrfd, epollwfd) != -1){
-					}
-				}
+				// if(pollfds[i].revents & (POLLIN | POLLPRI)){
+				// 	while(mqtt3_socket_accept(db, listensock[i], epollrfd, epollwfd) != -1){
+				// 	}
+				// }
 			}			
 		}
 #ifdef WITH_PERSISTENCE
