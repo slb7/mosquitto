@@ -519,31 +519,29 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 			}
 			if(revents[i].events & EPOLLOUT) {
 				printf("caught an EPOLLOUT event!\n");
-			}
-		}
-	}
-	for(i=0;i<wcount;i++) {
-		context = wevents[i].data.ptr;
-		if(context->want_write ||
-				(context->ssl && context->state == mosq_cs_new)) {
-			if(context->state == mosq_cs_connect_pending){
-				len = sizeof(int);
-				if(!getsockopt(context->sock, SOL_SOCKET, SO_ERROR, (char *)&err, &len)){
-					if(err == 0){
-						context->state = mosq_cs_new;
+				context = d->context;
+				if(context->want_write ||
+						(context->ssl && context->state == mosq_cs_new)) {
+					if(context->state == mosq_cs_connect_pending){
+						len = sizeof(int);
+						if(!getsockopt(context->sock, SOL_SOCKET, SO_ERROR, (char *)&err, &len)){
+							if(err == 0){
+								context->state = mosq_cs_new;
+							}
+						}else{
+							do_disconnect(db, context);
+							continue;
+						}
 					}
-				}else{
-					do_disconnect(db, context);
-					continue;
+					if(_mosquitto_packet_write(context)){
+						do_disconnect(db, context);
+						continue;
+					}
 				}
 			}
-			if(_mosquitto_packet_write(context)){
-				do_disconnect(db, context);
-				continue;
-			}
 		}
-
 	}
+
 	return;
 #ifdef DONOTDEFINE
 	HASH_ITER(hh_sock, db->contexts_by_sock, context, ctxt_tmp){
