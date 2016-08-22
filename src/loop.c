@@ -340,8 +340,10 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 				struct epoll_event event;
 				int fd = listensock[i];
 				printf("listensock adding %d\n",fd);
-				event.data.fd = fd;
-				//event.data.ptr = LISTENERPTR;
+				struct mosquitto_epoll_event_data *d = malloc(sizeof(mosquitto_epoll_event_data)); //this is a leak (kinda)!
+				event.data.ptr = d;
+				d->fd = fd;
+				d.isListener = true;
 			    event.events = EPOLLIN | EPOLLET;
 			    int s = epoll_ctl (epollrfd, EPOLL_CTL_ADD, fd, &event);
 			    if(s) {
@@ -354,7 +356,13 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		}
 		int readcount = epoll_wait(epollrfd, revents, MAX_EVENTS, 1000);
 		for(i=0;i<readcount;i++) {
-			printf("event occurred on %d\n",revents[i].data.fd);
+			struct mosquitto_epoll_event_data *d = revents[i].data.ptr;
+			if(d->isListener) {
+				printf("listener event occurred on %d\n",d->fd);
+			} else {
+				printf("context read event occured\n");
+			}
+
 		}
 		int writecount = epoll_wait(epollwfd, wevents, MAX_EVENTS, 1000);
 		if(readcount || writecount) {
@@ -493,12 +501,13 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 	socklen_t len;
 	int i;
 	for(i=0;i<rcount;i++) {
-		context = revents[i].data.ptr;
-		if(context == LISTENERPTR) {
-			printf("listener event fd=%d\n",revents[i].data.fd);
-			// while(mqtt3_socket_accept(db, revents[i].data.fd, epollrfd, epollwfd) != -1){
-			// }
+		struct mosquitto_epoll_event_data *d = revents[i].data.ptr;
+		if(d->isListener) {
+			printf("listener event fd=%d\n",d->fd);
+			while(mqtt3_socket_accept(db, d->fd, epollrfd, epollwfd) != -1){
+			}
 		} else {
+			context = d->context;
 			printf("read event %d\n", context->sock);
 			do{
 				if(_mosquitto_packet_read(db, context)){

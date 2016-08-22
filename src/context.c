@@ -34,8 +34,10 @@ struct mosquitto *mqtt3_context_init(struct mosquitto_db *db, mosq_sock_t sock,i
 	context = _mosquitto_calloc(1, sizeof(struct mosquitto));
 	if(!context) return NULL;
 	struct epoll_event event;
-	event.data.fd = sock;
-	event.data.ptr = context;
+	struct mosquitto_epoll_event_data *d = malloc(sizeof(mosquitto_epoll_event_data)); //this is a leak!
+	d->context = context;
+	d->isListener = false;
+	event.data.ptr = d;
     event.events = EPOLLIN | EPOLLET;
     int s = epoll_ctl (epollrfd, EPOLL_CTL_ADD, sock, &event);
     if(s == -1) {
