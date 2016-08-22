@@ -518,7 +518,7 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 				}while(SSL_DATA_PENDING(context));
 			}
 			if(revents[i].events & EPOLLOUT) {
-				printf("caught an EPOLLOUT event!\n")
+				printf("caught an EPOLLOUT event!\n");
 			}
 		}
 	}
