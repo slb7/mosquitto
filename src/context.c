@@ -38,10 +38,16 @@ struct mosquitto *mqtt3_context_init(struct mosquitto_db *db, mosq_sock_t sock,i
 	event.data.ptr = context;
     event.events = EPOLLIN | EPOLLET;
     int s = epoll_ctl (epollrfd, EPOLL_CTL_ADD, sock, &event);
-    if(s == -1) return NULL;
+    if(s == -1) {
+    	printf("could not add to epollrfd\n")
+    	return NULL;
+    }
     event.events = EPOLLOUT | EPOLLET;
     s = epoll_ctl (epollwfd, EPOLL_CTL_ADD, sock, &event);
-    if(s == -1 ) return NULL;
+    if(s == -1 ) {
+    	printf("could not add to epollwfd\n")
+    	return NULL;
+    }
     printf("sucessfully added to epolfds\n");
 	context->state = mosq_cs_new;
 	context->sock = sock;
