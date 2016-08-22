@@ -102,6 +102,7 @@ int mqtt3_socket_accept(struct mosquitto_db *db, mosq_sock_t listensock,int epol
 #endif
 
 	new_sock = accept(listensock, NULL, 0);
+	printf("newsock = %d listensock = %d\n", new_sock, listensock);
 	if(new_sock == INVALID_SOCKET) return -1;
 
 #ifdef WITH_SYS_TREE
