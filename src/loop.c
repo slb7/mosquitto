@@ -344,7 +344,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 				context->is_listener = true;
 				context->sock = fd;
 				event.data.ptr = context;
-\			    event.events = EPOLLIN | EPOLLET;
+			    event.events = EPOLLIN | EPOLLET;
 			    int s = epoll_ctl (epollfd, EPOLL_CTL_ADD, fd, &event);
 			    if(s) {
 			    	printf("unsuccessful add fd=%d\n",fd);
