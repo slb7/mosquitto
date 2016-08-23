@@ -226,8 +226,10 @@ void bridgeThing(struct mosquitto_db *db) {
 #endif
 
 }
-void iter2(struct mosquitto_db *db, int *expiration_check_time) {
+void iter2(struct mosquitto_db *db, time_count *expiration_check_time) {
 	struct mosquitto *context, *ctxt_tmp;
+	int now_time = time(NULL);
+	char *id;
 			if(db->config->persistent_client_expiration > 0 && now_time > *expiration_check_time){
 			HASH_ITER(hh_id, db->contexts_by_id, context, ctxt_tmp){
 				if(context->sock == INVALID_SOCKET && context->clean_session == 0){
