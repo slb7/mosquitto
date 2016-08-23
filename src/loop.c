@@ -379,7 +379,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 #ifdef WITH_BRIDGE
 		context_count += db->bridge_count;
 #endif
-		iter1(db);
+		//iter1(db);
 		bridgeThing(db);
 		now_time = time(NULL);
 		iter2(db,&expiration_check_time);
