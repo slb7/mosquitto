@@ -96,17 +96,20 @@ void iter1(struct mosquitto_db *db) {
 	struct mosquitto *context, *ctxt_tmp;
 	char *id;
 		int time_count = 0;
+		int now = 0;
 		HASH_ITER(hh_sock, db->contexts_by_sock, context, ctxt_tmp){
 			if(time_count > 0){
 				time_count--;
 			}else{
 				time_count = 1000;
-				int now = mosquitto_time();
+				now = mosquitto_time();
 			}
 			context->pollfd_index = -1;
 
 			if(context->sock != INVALID_SOCKET){
 #ifdef WITH_BRIDGE
+	mosq_sock_t bridge_sock;
+	int rc;
 				if(context->bridge){
 					_mosquitto_check_keepalive(db, context);
 					if(context->bridge->round_robin == false
