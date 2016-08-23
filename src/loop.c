@@ -158,6 +158,73 @@ void iter1(struct mosquitto_db *db) {
 			}
 		} //END HASH ITER
 }
+void bridgeThing(mosquitto_db *db) {
+		int now_time = time(NULL);
+
+
+
+#ifdef WITH_BRIDGE
+		time_count = 0;
+		for(i=0; i<db->bridge_count; i++){
+			if(!db->bridges[i]) continue;
+
+			context = db->bridges[i];
+
+			if(context->sock == INVALID_SOCKET){
+				if(time_count > 0){
+					time_count--;
+				}else{
+					time_count = 1000;
+					now = mosquitto_time();
+				}
+				/* Want to try to restart the bridge connection */
+				if(!context->bridge->restart_t){
+					context->bridge->restart_t = now+context->bridge->restart_timeout;
+					context->bridge->cur_address++;
+					if(context->bridge->cur_address == context->bridge->address_count){
+						context->bridge->cur_address = 0;
+					}
+					if(context->bridge->round_robin == false && context->bridge->cur_address != 0){
+						context->bridge->primary_retry = now + 5;
+					}
+				}else{
+					if(context->bridge->start_type == bst_lazy && context->bridge->lazy_reconnect){
+						rc = mqtt3_bridge_connect(db, context);
+						if(rc){
+							context->bridge->cur_address++;
+							if(context->bridge->cur_address == context->bridge->address_count){
+								context->bridge->cur_address = 0;
+							}
+						}
+					}
+					if(context->bridge->start_type == bst_automatic && now > context->bridge->restart_t){
+						context->bridge->restart_t = 0;
+						rc = mqtt3_bridge_connect(db, context);
+						if(rc == MOSQ_ERR_SUCCESS){
+							// pollfds[pollfd_index].fd = context->sock;
+							// pollfds[pollfd_index].events = POLLIN;
+							// pollfds[pollfd_index].revents = 0;
+							// if(context->current_out_packet){
+							// 	pollfds[pollfd_index].events |= POLLOUT;
+							// }
+							// context->pollfd_index = pollfd_index;
+							// pollfd_index++;
+						}else{
+							/* Retry later. */
+							context->bridge->restart_t = now+context->bridge->restart_timeout;
+
+							context->bridge->cur_address++;
+							if(context->bridge->cur_address == context->bridge->address_count){
+								context->bridge->cur_address = 0;
+							}
+						}
+					}
+				}
+			}
+		}
+#endif
+
+}
 int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int listensock_count, int listener_max)
 {
 	static int epollfd = -1;
@@ -232,78 +299,14 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 
 		memset(pollfds, -1, sizeof(struct pollfd)*pollfd_count);
 		iter1(db);
-		pollfd_index = 0;
+		// pollfd_index = 0;
 		// for(i=0; i<listensock_count; i++){
 		// 	pollfds[pollfd_index].fd = listensock[i];
 		// 	pollfds[pollfd_index].events = POLLIN;
 		// 	pollfds[pollfd_index].revents = 0;
 		// 	pollfd_index++;
 		// }
-
-		now_time = time(NULL);
-
-
-
-#ifdef WITH_BRIDGE
-		time_count = 0;
-		for(i=0; i<db->bridge_count; i++){
-			if(!db->bridges[i]) continue;
-
-			context = db->bridges[i];
-
-			if(context->sock == INVALID_SOCKET){
-				if(time_count > 0){
-					time_count--;
-				}else{
-					time_count = 1000;
-					now = mosquitto_time();
-				}
-				/* Want to try to restart the bridge connection */
-				if(!context->bridge->restart_t){
-					context->bridge->restart_t = now+context->bridge->restart_timeout;
-					context->bridge->cur_address++;
-					if(context->bridge->cur_address == context->bridge->address_count){
-						context->bridge->cur_address = 0;
-					}
-					if(context->bridge->round_robin == false && context->bridge->cur_address != 0){
-						context->bridge->primary_retry = now + 5;
-					}
-				}else{
-					if(context->bridge->start_type == bst_lazy && context->bridge->lazy_reconnect){
-						rc = mqtt3_bridge_connect(db, context);
-						if(rc){
-							context->bridge->cur_address++;
-							if(context->bridge->cur_address == context->bridge->address_count){
-								context->bridge->cur_address = 0;
-							}
-						}
-					}
-					if(context->bridge->start_type == bst_automatic && now > context->bridge->restart_t){
-						context->bridge->restart_t = 0;
-						rc = mqtt3_bridge_connect(db, context);
-						if(rc == MOSQ_ERR_SUCCESS){
-							// pollfds[pollfd_index].fd = context->sock;
-							// pollfds[pollfd_index].events = POLLIN;
-							// pollfds[pollfd_index].revents = 0;
-							// if(context->current_out_packet){
-							// 	pollfds[pollfd_index].events |= POLLOUT;
-							// }
-							// context->pollfd_index = pollfd_index;
-							// pollfd_index++;
-						}else{
-							/* Retry later. */
-							context->bridge->restart_t = now+context->bridge->restart_timeout;
-
-							context->bridge->cur_address++;
-							if(context->bridge->cur_address == context->bridge->address_count){
-								context->bridge->cur_address = 0;
-							}
-						}
-					}
-				}
-			}
-		}
-#endif
+		bridgeThing(db);
 		now_time = time(NULL);
 		if(db->config->persistent_client_expiration > 0 && now_time > expiration_check_time){
 			HASH_ITER(hh_id, db->contexts_by_id, context, ctxt_tmp){
