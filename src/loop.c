@@ -372,25 +372,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 #ifdef WITH_BRIDGE
 		context_count += db->bridge_count;
 #endif
-
-		// if(listensock_count + context_count > pollfd_count || !pollfds){
-		// 	pollfd_count = listensock_count + context_count;
-		// 	pollfds = _mosquitto_realloc(pollfds, sizeof(struct pollfd)*pollfd_count);
-		// 	if(!pollfds){
-		// 		_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Out of memory.");
-		// 		return MOSQ_ERR_NOMEM;
-		// 	}
-		// }
-
-		// memset(pollfds, -1, sizeof(struct pollfd)*pollfd_count);
 		iter1(db);
-		// pollfd_index = 0;
-		// for(i=0; i<listensock_count; i++){
-		// 	pollfds[pollfd_index].fd = listensock[i];
-		// 	pollfds[pollfd_index].events = POLLIN;
-		// 	pollfds[pollfd_index].revents = 0;
-		// 	pollfd_index++;
-		// }
 		bridgeThing(db);
 		now_time = time(NULL);
 		iter2(db,&expiration_check_time);
@@ -425,19 +407,6 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 			listernersAdded = true;
 		}
 		int count = epoll_wait(epollfd, events, MAX_EVENTS, 1000);
-		for(i=0;i<count;i++) {
-			struct mosquitto *context = events[i].data.ptr;
-			if(context->is_listener) {
-				printf("listener event occurred on %d\n",context->sock);
-			} else {
-				printf("context read event occured\n");
-			}
-
-		}
-		// int writecount = epoll_wait(epollwfd, wevents, MAX_EVENTS, 1000);
-		// if(readcount || writecount) {
-		// 	printf("read=%d write=%d\n",readcount,writecount);
-		// }
 		sigprocmask(SIG_SETMASK, &origsig, NULL);
 #else
 		fdcount = WSAPoll(pollfds, pollfd_index, 100);
@@ -448,16 +417,6 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		}else{
 			//loop_handle_reads_writes(db, pollfds);
 			loop_handle_reads_writesx(db, events, count, epollfd);
-		}
-		if(fdcount == -1) {
-			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error in poll: %s.", strerror(errno));
-		} else {
-			for(i=0; i<listensock_count; i++){
-				// if(pollfds[i].revents & (POLLIN | POLLPRI)){
-				// 	while(mqtt3_socket_accept(db, listensock[i], epollrfd, epollwfd) != -1){
-				// 	}
-				// }
-			}			
 		}
 		cleanStuffUp(db,&last_backup);
 	}
