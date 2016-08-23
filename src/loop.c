@@ -160,7 +160,8 @@ void iter1(struct mosquitto_db *db) {
 }
 void bridgeThing(struct mosquitto_db *db) {
 		int now_time = time(NULL);
-
+		int i,rc,now,time_count;
+		struct mosquitto *context;
 
 
 #ifdef WITH_BRIDGE
