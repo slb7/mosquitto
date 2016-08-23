@@ -93,7 +93,7 @@ static void temp__expire_websockets_clients(struct mosquitto_db *db)
 }
 #endif
 void iter1() {
-	
+
 }
 int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int listensock_count, int listener_max)
 {
@@ -335,7 +335,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 
 #ifndef WIN32
 		sigprocmask(SIG_SETMASK, &sigblock, &origsig);
-		fdcount = poll(pollfds, pollfd_index, 100);
+		// fdcount = poll(pollfds, pollfd_index, 100);
 		if(!listernersAdded) {
 			for(i=0;i<listensock_count;i++) {
 				struct epoll_event event;
