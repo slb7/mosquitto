@@ -323,6 +323,13 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
     if(epollfd == -1) {
     	epollfd = epoll_create(1);
     	epollwfd = epoll_create(1);
+    	event.data.fd = epollwfd;
+    	event.events = EPOLLOUT | EPOLLERR; // EPOLLET - some kind of chicken?
+    	int s = epoll_ctl (epollrfd, EPOLL_CTL_ADD, sock, &event);
+    	if(s == -1) {
+    		printf("could not add to epollwfd to epollrfd\n");
+    		return NULL;
+    	}
     }
 #ifdef WITH_SYS_TREE
 	time_t start_time = mosquitto_time();
@@ -486,6 +493,10 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 	}
 	printf("lhrw\n");
 	for(i=0;i<count;i++) {
+		if(events[i].data.fd == epollwfd) {
+			printf("we have a wfd event\n");
+			continue;
+		}
 		struct mosquitto *context = events[i].data.ptr;
 		if(context->is_listener) {
 			//printf("listener event fd=%d\n",context->sock);
