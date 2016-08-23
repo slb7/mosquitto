@@ -101,7 +101,7 @@ void iter1(struct mosquitto_db *db) {
 				time_count--;
 			}else{
 				time_count = 1000;
-				now = mosquitto_time();
+				int now = mosquitto_time();
 			}
 			context->pollfd_index = -1;
 
