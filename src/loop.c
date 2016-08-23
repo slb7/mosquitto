@@ -277,14 +277,14 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 						context->bridge->restart_t = 0;
 						rc = mqtt3_bridge_connect(db, context);
 						if(rc == MOSQ_ERR_SUCCESS){
-							pollfds[pollfd_index].fd = context->sock;
-							pollfds[pollfd_index].events = POLLIN;
-							pollfds[pollfd_index].revents = 0;
-							if(context->current_out_packet){
-								pollfds[pollfd_index].events |= POLLOUT;
-							}
-							context->pollfd_index = pollfd_index;
-							pollfd_index++;
+							// pollfds[pollfd_index].fd = context->sock;
+							// pollfds[pollfd_index].events = POLLIN;
+							// pollfds[pollfd_index].revents = 0;
+							// if(context->current_out_packet){
+							// 	pollfds[pollfd_index].events |= POLLOUT;
+							// }
+							// context->pollfd_index = pollfd_index;
+							// pollfd_index++;
 						}else{
 							/* Retry later. */
 							context->bridge->restart_t = now+context->bridge->restart_timeout;
