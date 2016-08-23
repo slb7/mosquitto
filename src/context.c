@@ -45,7 +45,7 @@ struct mosquitto *mqtt3_context_init(struct mosquitto_db *db, mosq_sock_t sock,i
     	return NULL;
     }
     event.events = EPOLLOUT | EPOLLERR | EPOLLET;
-    s = epoll_ctl (epollrfd, EPOLL_CTL_ADD, sock, &event);
+    s = epoll_ctl (epollwfd, EPOLL_CTL_ADD, sock, &event);
     if(s == -1 ) {
     	printf("could not add to epollwfd\n");
     	return NULL;
