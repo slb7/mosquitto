@@ -455,7 +455,7 @@ int mqtt3_db_message_insert(struct mosquitto_db *db, struct mosquitto *context, 
 		context->bridge->lazy_reconnect = true;
 	}
 #endif
-
+rc = mqtt3_db_message_write(db,context);
 #ifdef WITH_WEBSOCKETS
 	if(context->wsi && rc == 0){
 		return mqtt3_db_message_write(db, context);
