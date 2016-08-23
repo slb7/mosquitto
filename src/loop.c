@@ -92,7 +92,7 @@ static void temp__expire_websockets_clients(struct mosquitto_db *db)
 	}
 }
 #endif
-void iter1(struct mosquitto_db *db) {
+void iter1x(struct mosquitto_db *db) {
 	struct mosquitto *context, *ctxt_tmp;
 	char *id;
 		int time_count = 0;
