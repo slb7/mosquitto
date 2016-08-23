@@ -3,9 +3,12 @@
 #
 # To configure the build options either use the CMake gui, or run the command
 # line utility including the "-i" option.
+SET( CMAKE_C_FLAGS_Profile "-pg" CACHE STRING
+    "Flags used by the C compiler during Profile builds."
+    FORCE )
 
 set(CMAKE_LEGACY_CYGWIN_WIN32 0)
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Profile)
 project(mosquitto)
 
 cmake_minimum_required(VERSION 2.8)
