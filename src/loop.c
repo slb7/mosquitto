@@ -484,7 +484,7 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 	for(i=0;i<count;i++) {
 		struct mosquitto *context = events[i].data.ptr;
 		if(context->is_listener) {
-			printf("listener event fd=%d\n",context->sock);
+			//printf("listener event fd=%d\n",context->sock);
 			while(mqtt3_socket_accept(db, context->sock, epollfd, 0) != -1){
 			}
 		} else {
@@ -492,14 +492,14 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 				printf("read event %d\n", context->sock);
 				do{
 					if(_mosquitto_packet_read(db, context)){
-						printf("disconnecting\n");
+						//printf("disconnecting\n");
 						do_disconnect(db, context);
 						continue;
 					}
 				}while(SSL_DATA_PENDING(context));
 			}
 			if(events[i].events & EPOLLOUT) {
-				printf("caught an EPOLLOUT event!\n");
+				//printf("caught an EPOLLOUT event!\n");
 				if(context->want_write ||
 						(context->ssl && context->state == mosq_cs_new)) {
 					if(context->state == mosq_cs_connect_pending){
