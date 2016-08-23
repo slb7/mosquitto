@@ -232,7 +232,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 
 		memset(pollfds, -1, sizeof(struct pollfd)*pollfd_count);
 		iter1(db);
-		// pollfd_index = 0;
+		pollfd_index = 0;
 		// for(i=0; i<listensock_count; i++){
 		// 	pollfds[pollfd_index].fd = listensock[i];
 		// 	pollfds[pollfd_index].events = POLLIN;
