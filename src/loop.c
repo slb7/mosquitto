@@ -481,6 +481,7 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 	int err;
 	socklen_t len;
 	int i;
+	printf("lhrw\n");
 	for(i=0;i<count;i++) {
 		struct mosquitto *context = events[i].data.ptr;
 		if(context->is_listener) {
