@@ -489,7 +489,7 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 			}
 		} else {
 			if(events[i].events & EPOLLIN) {
-				printf("read event %d\n", context->sock);
+				//printf("read event %d\n", context->sock);
 				do{
 					if(_mosquitto_packet_read(db, context)){
 						//printf("disconnecting\n");
