@@ -226,7 +226,7 @@ void bridgeThing(struct mosquitto_db *db) {
 #endif
 
 }
-void iter2(struct mosquitto_db *db, time_count *expiration_check_time) {
+void iter2(struct mosquitto_db *db, time_t *expiration_check_time) {
 	struct mosquitto *context, *ctxt_tmp;
 	int now_time = time(NULL);
 	char *id;
