@@ -226,6 +226,36 @@ void bridgeThing(struct mosquitto_db *db) {
 #endif
 
 }
+void iter2(struct mosquitto_db *db, int *expiration_check_time) {
+	struct mosquitto *context, *ctxt_tmp;
+			if(db->config->persistent_client_expiration > 0 && now_time > *expiration_check_time){
+			HASH_ITER(hh_id, db->contexts_by_id, context, ctxt_tmp){
+				if(context->sock == INVALID_SOCKET && context->clean_session == 0){
+					/* This is a persistent client, check to see if the
+					 * last time it connected was longer than
+					 * persistent_client_expiration seconds ago. If so,
+					 * expire it and clean up.
+					 */
+					if(now_time > context->disconnect_t+db->config->persistent_client_expiration){
+						if(context->id){
+							id = context->id;
+						}else{
+							id = "<unknown>";
+						}
+						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Expiring persistent client %s due to timeout.", id);
+#ifdef WITH_SYS_TREE
+						g_clients_expired++;
+#endif
+						context->clean_session = true;
+						context->state = mosq_cs_expiring;
+						do_disconnect(db, context);
+					}
+				}
+			}
+			*expiration_check_time = time(NULL) + 3600;
+		}
+
+}
 int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int listensock_count, int listener_max)
 {
 	static int epollfd = -1;
@@ -309,32 +339,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		// }
 		bridgeThing(db);
 		now_time = time(NULL);
-		if(db->config->persistent_client_expiration > 0 && now_time > expiration_check_time){
-			HASH_ITER(hh_id, db->contexts_by_id, context, ctxt_tmp){
-				if(context->sock == INVALID_SOCKET && context->clean_session == 0){
-					/* This is a persistent client, check to see if the
-					 * last time it connected was longer than
-					 * persistent_client_expiration seconds ago. If so,
-					 * expire it and clean up.
-					 */
-					if(now_time > context->disconnect_t+db->config->persistent_client_expiration){
-						if(context->id){
-							id = context->id;
-						}else{
-							id = "<unknown>";
-						}
-						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Expiring persistent client %s due to timeout.", id);
-#ifdef WITH_SYS_TREE
-						g_clients_expired++;
-#endif
-						context->clean_session = true;
-						context->state = mosq_cs_expiring;
-						do_disconnect(db, context);
-					}
-				}
-			}
-			expiration_check_time = time(NULL) + 3600;
-		}
+		iter2(db,&expiration_check_time);
 
 		if(last_timeout_check < mosquitto_time()){
 			/* Only check at most once per second. */
