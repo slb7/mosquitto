@@ -492,7 +492,7 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 	if(wevents == NULL) {
 		wevents = (struct epoll_event *)malloc(MAX_EVENTS * sizeof(struct epoll_event));
 	}
-	printf("lhrw\n");
+	//printf("lhrw\n");
 	for(i=0;i<count;i++) {
 		if(events[i].data.fd == epollwfd) {
 			printf("we have a wfd event\n");
