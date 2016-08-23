@@ -92,8 +92,68 @@ static void temp__expire_websockets_clients(struct mosquitto_db *db)
 	}
 }
 #endif
-void iter1() {
+void iter1(struct mosquitto_db *db) {
+	struct mosquitto *context, *ctxt_tmp;
+	char *id;
+		int time_count = 0;
+		HASH_ITER(hh_sock, db->contexts_by_sock, context, ctxt_tmp){
+			if(time_count > 0){
+				time_count--;
+			}else{
+				time_count = 1000;
+				now = mosquitto_time();
+			}
+			context->pollfd_index = -1;
 
+			if(context->sock != INVALID_SOCKET){
+#ifdef WITH_BRIDGE
+				if(context->bridge){
+					_mosquitto_check_keepalive(db, context);
+					if(context->bridge->round_robin == false
+							&& context->bridge->cur_address != 0
+							&& now > context->bridge->primary_retry){
+
+						if(_mosquitto_try_connect(context, context->bridge->addresses[0].address, 
+							context->bridge->addresses[0].port, &bridge_sock, NULL, false) <= 0){
+							COMPAT_CLOSE(bridge_sock);
+							_mosquitto_socket_close(db, context);
+							context->bridge->cur_address = context->bridge->address_count-1;
+						}
+					}
+				}
+#endif
+
+				/* Local bridges never time out in this fashion. */
+				if(!(context->keepalive)
+						|| context->bridge
+						|| now - context->last_msg_in < (time_t)(context->keepalive)*3/2){
+
+					if(mqtt3_db_message_write(db, context) == MOSQ_ERR_SUCCESS){
+						// pollfds[pollfd_index].fd = context->sock;
+						// pollfds[pollfd_index].events = POLLIN;
+						// pollfds[pollfd_index].revents = 0;
+						// if(context->current_out_packet || context->state == mosq_cs_connect_pending){
+						// 	pollfds[pollfd_index].events |= POLLOUT;
+						// }
+						// context->pollfd_index = pollfd_index;
+						// pollfd_index++;
+					}else{
+						do_disconnect(db, context);
+					}
+				}else{
+					if(db->config->connection_messages == true){
+						if(context->id){
+							id = context->id;
+						}else{
+							id = "<unknown>";
+						}
+						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", id);
+					}
+					/* Client has exceeded keepalive*1.5 */
+					do_disconnect(db, context);
+				}
+			}
+		} //END HASH ITER
 }
 int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int listensock_count, int listener_max)
 {
@@ -168,7 +228,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		}
 
 		memset(pollfds, -1, sizeof(struct pollfd)*pollfd_count);
-
+		iter1(db);
 		pollfd_index = 0;
 		for(i=0; i<listensock_count; i++){
 			pollfds[pollfd_index].fd = listensock[i];
@@ -179,65 +239,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 
 		now_time = time(NULL);
 
-		time_count = 0;
-		HASH_ITER(hh_sock, db->contexts_by_sock, context, ctxt_tmp){
-			if(time_count > 0){
-				time_count--;
-			}else{
-				time_count = 1000;
-				now = mosquitto_time();
-			}
-			context->pollfd_index = -1;
 
-			if(context->sock != INVALID_SOCKET){
-#ifdef WITH_BRIDGE
-				if(context->bridge){
-					_mosquitto_check_keepalive(db, context);
-					if(context->bridge->round_robin == false
-							&& context->bridge->cur_address != 0
-							&& now > context->bridge->primary_retry){
-
-						if(_mosquitto_try_connect(context, context->bridge->addresses[0].address, 
-							context->bridge->addresses[0].port, &bridge_sock, NULL, false) <= 0){
-							COMPAT_CLOSE(bridge_sock);
-							_mosquitto_socket_close(db, context);
-							context->bridge->cur_address = context->bridge->address_count-1;
-						}
-					}
-				}
-#endif
-
-				/* Local bridges never time out in this fashion. */
-				if(!(context->keepalive)
-						|| context->bridge
-						|| now - context->last_msg_in < (time_t)(context->keepalive)*3/2){
-
-					if(mqtt3_db_message_write(db, context) == MOSQ_ERR_SUCCESS){
-						pollfds[pollfd_index].fd = context->sock;
-						pollfds[pollfd_index].events = POLLIN;
-						pollfds[pollfd_index].revents = 0;
-						if(context->current_out_packet || context->state == mosq_cs_connect_pending){
-							pollfds[pollfd_index].events |= POLLOUT;
-						}
-						context->pollfd_index = pollfd_index;
-						pollfd_index++;
-					}else{
-						do_disconnect(db, context);
-					}
-				}else{
-					if(db->config->connection_messages == true){
-						if(context->id){
-							id = context->id;
-						}else{
-							id = "<unknown>";
-						}
-						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", id);
-					}
-					/* Client has exceeded keepalive*1.5 */
-					do_disconnect(db, context);
-				}
-			}
-		} //END HASH ITER
 
 #ifdef WITH_BRIDGE
 		time_count = 0;
