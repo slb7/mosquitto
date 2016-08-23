@@ -258,6 +258,58 @@ void iter2(struct mosquitto_db *db, time_t *expiration_check_time) {
 		}
 
 }
+void cleanStuffUp(struct mosquitto_db *db) {
+	#ifdef WITH_PERSISTENCE
+		if(db->config->persistence && db->config->autosave_interval){
+			if(db->config->autosave_on_changes){
+				if(db->persistence_changes >= db->config->autosave_interval){
+					mqtt3_db_backup(db, false);
+					db->persistence_changes = 0;
+				}
+			}else{
+				if(last_backup + db->config->autosave_interval < mosquitto_time()){
+					mqtt3_db_backup(db, false);
+					last_backup = mosquitto_time();
+				}
+			}
+		}
+#endif
+
+#ifdef WITH_PERSISTENCE
+		if(flag_db_backup){
+			mqtt3_db_backup(db, false);
+			flag_db_backup = false;
+		}
+#endif
+		if(flag_reload){
+			_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "Reloading config.");
+			mqtt3_config_read(db->config, true);
+			mosquitto_security_cleanup(db, true);
+			mosquitto_security_init(db, true);
+			mosquitto_security_apply(db);
+			mqtt3_log_close(db->config);
+			mqtt3_log_init(db->config);
+			flag_reload = false;
+		}
+		if(flag_tree_print){
+			mqtt3_sub_tree_print(&db->subs, 0);
+			flag_tree_print = false;
+		}
+#ifdef WITH_WEBSOCKETS
+		for(i=0; i<db->config->listener_count; i++){
+			/* Extremely hacky, should be using the lws provided external poll
+			 * interface, but their interface has changed recently and ours
+			 * will soon, so for now websockets clients are second class
+			 * citizens. */
+			if(db->config->listeners[i].ws_context){
+				libwebsocket_service(db->config->listeners[i].ws_context, 0);
+			}
+		}
+		if(db->config->have_websockets_listener){
+			temp__expire_websockets_clients(db);
+		}
+#endif
+}
 int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int listensock_count, int listener_max)
 {
 	static int epollfd = -1;
@@ -407,56 +459,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 				// }
 			}			
 		}
-#ifdef WITH_PERSISTENCE
-		if(db->config->persistence && db->config->autosave_interval){
-			if(db->config->autosave_on_changes){
-				if(db->persistence_changes >= db->config->autosave_interval){
-					mqtt3_db_backup(db, false);
-					db->persistence_changes = 0;
-				}
-			}else{
-				if(last_backup + db->config->autosave_interval < mosquitto_time()){
-					mqtt3_db_backup(db, false);
-					last_backup = mosquitto_time();
-				}
-			}
-		}
-#endif
-
-#ifdef WITH_PERSISTENCE
-		if(flag_db_backup){
-			mqtt3_db_backup(db, false);
-			flag_db_backup = false;
-		}
-#endif
-		if(flag_reload){
-			_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "Reloading config.");
-			mqtt3_config_read(db->config, true);
-			mosquitto_security_cleanup(db, true);
-			mosquitto_security_init(db, true);
-			mosquitto_security_apply(db);
-			mqtt3_log_close(db->config);
-			mqtt3_log_init(db->config);
-			flag_reload = false;
-		}
-		if(flag_tree_print){
-			mqtt3_sub_tree_print(&db->subs, 0);
-			flag_tree_print = false;
-		}
-#ifdef WITH_WEBSOCKETS
-		for(i=0; i<db->config->listener_count; i++){
-			/* Extremely hacky, should be using the lws provided external poll
-			 * interface, but their interface has changed recently and ours
-			 * will soon, so for now websockets clients are second class
-			 * citizens. */
-			if(db->config->listeners[i].ws_context){
-				libwebsocket_service(db->config->listeners[i].ws_context, 0);
-			}
-		}
-		if(db->config->have_websockets_listener){
-			temp__expire_websockets_clients(db);
-		}
-#endif
+		cleanStuffUp(db);
 	}
 
 	if(pollfds) _mosquitto_free(pollfds);
