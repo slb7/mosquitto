@@ -6,6 +6,10 @@
 SET( CMAKE_C_FLAGS_Profile "-pg" CACHE STRING
     "Flags used by the C compiler during Profile builds."
     FORCE )
+SET( CMAKE_EXE_LINKER_FLAGS_Profile
+    "-pg" CACHE STRING
+    "Flags used for linking binaries during Profile builds."
+    FORCE )
 
 set(CMAKE_LEGACY_CYGWIN_WIN32 0)
 set(CMAKE_BUILD_TYPE Profile)
