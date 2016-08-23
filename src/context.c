@@ -38,7 +38,8 @@ struct mosquitto *mqtt3_context_init(struct mosquitto_db *db, mosq_sock_t sock,i
 	//d->context = context;
 	//d->isListener = false;
 	event.data.ptr = context;
-    event.events = EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLET; // EPOLLET - some kind of chicken?
+    //event.events = EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLET; // EPOLLET - some kind of chicken?
+    event.events = EPOLLIN | EPOLLOUT | EPOLLERR; // EPOLLET - some kind of chicken?
     int s = epoll_ctl (epollrfd, EPOLL_CTL_ADD, sock, &event);
     if(s == -1) {
     	printf("could not add to epollrfd\n");
