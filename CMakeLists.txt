@@ -12,7 +12,6 @@ SET( CMAKE_EXE_LINKER_FLAGS_PROFILE
     FORCE )
 
 set(CMAKE_LEGACY_CYGWIN_WIN32 0)
-#set(CMAKE_BUILD_TYPE PROFILE)
 project(mosquitto)
 
 cmake_minimum_required(VERSION 2.8)
