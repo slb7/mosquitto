@@ -323,9 +323,10 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
     if(epollfd == -1) {
     	epollfd = epoll_create(1);
     	epollwfd = epoll_create(1);
+    	struct epoll_event event;
     	event.data.fd = epollwfd;
     	event.events = EPOLLOUT | EPOLLERR; // EPOLLET - some kind of chicken?
-    	int s = epoll_ctl (epollrfd, EPOLL_CTL_ADD, sock, &event);
+    	int s = epoll_ctl (epollrfd, EPOLL_CTL_ADD, epollwfd, &event);
     	if(s == -1) {
     		printf("could not add to epollwfd to epollrfd\n");
     		return NULL;
