@@ -158,7 +158,7 @@ void iter1(struct mosquitto_db *db) {
 			}
 		} //END HASH ITER
 }
-void bridgeThing(mosquitto_db *db) {
+void bridgeThing(struct mosquitto_db *db) {
 		int now_time = time(NULL);
 
 
