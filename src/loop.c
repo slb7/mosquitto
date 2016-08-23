@@ -59,7 +59,7 @@ extern int g_clients_expired;
 #endif
 #define MAX_EVENTS 8192
 #define LISTENERPTR NULL
-static void loop_handle_reads_writes(struct mosquitto_db *db, struct pollfd *pollfds);
+//static void loop_handle_reads_writes(struct mosquitto_db *db, struct pollfd *pollfds);
 static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_event* events, int count, int epollfd);
 static bool listernersAdded = false;
 
@@ -581,7 +581,7 @@ static void loop_handle_reads_writesx(struct mosquitto_db *db, struct epoll_even
 #endif
 }
 
-static void loop_handle_reads_writes(struct mosquitto_db *db, struct pollfd *pollfds)
+/*static void loop_handle_reads_writes(struct mosquitto_db *db, struct pollfd *pollfds)
 {
 	struct mosquitto *context, *ctxt_tmp;
 	int err;
@@ -642,4 +642,4 @@ static void loop_handle_reads_writes(struct mosquitto_db *db, struct pollfd *pol
 		}
 	}
 }
-
+*/
