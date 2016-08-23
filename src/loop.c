@@ -258,7 +258,7 @@ void iter2(struct mosquitto_db *db, time_t *expiration_check_time) {
 		}
 
 }
-void cleanStuffUp(struct mosquitto_db *db) {
+void cleanStuffUp(struct mosquitto_db *db,time_t *last_backup) {
 	#ifdef WITH_PERSISTENCE
 		if(db->config->persistence && db->config->autosave_interval){
 			if(db->config->autosave_on_changes){
@@ -267,9 +267,9 @@ void cleanStuffUp(struct mosquitto_db *db) {
 					db->persistence_changes = 0;
 				}
 			}else{
-				if(last_backup + db->config->autosave_interval < mosquitto_time()){
+				if((*last_backup) + db->config->autosave_interval < mosquitto_time()){
 					mqtt3_db_backup(db, false);
-					last_backup = mosquitto_time();
+					*last_backup = mosquitto_time();
 				}
 			}
 		}
@@ -459,7 +459,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 				// }
 			}			
 		}
-		cleanStuffUp(db);
+		cleanStuffUp(db,&last_backup);
 	}
 
 	if(pollfds) _mosquitto_free(pollfds);
