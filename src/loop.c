@@ -373,16 +373,16 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		context_count += db->bridge_count;
 #endif
 
-		if(listensock_count + context_count > pollfd_count || !pollfds){
-			pollfd_count = listensock_count + context_count;
-			pollfds = _mosquitto_realloc(pollfds, sizeof(struct pollfd)*pollfd_count);
-			if(!pollfds){
-				_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Out of memory.");
-				return MOSQ_ERR_NOMEM;
-			}
-		}
+		// if(listensock_count + context_count > pollfd_count || !pollfds){
+		// 	pollfd_count = listensock_count + context_count;
+		// 	pollfds = _mosquitto_realloc(pollfds, sizeof(struct pollfd)*pollfd_count);
+		// 	if(!pollfds){
+		// 		_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Out of memory.");
+		// 		return MOSQ_ERR_NOMEM;
+		// 	}
+		// }
 
-		memset(pollfds, -1, sizeof(struct pollfd)*pollfd_count);
+		// memset(pollfds, -1, sizeof(struct pollfd)*pollfd_count);
 		iter1(db);
 		// pollfd_index = 0;
 		// for(i=0; i<listensock_count; i++){
