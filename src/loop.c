@@ -92,7 +92,9 @@ static void temp__expire_websockets_clients(struct mosquitto_db *db)
 	}
 }
 #endif
-void iter1x(struct mosquitto_db *db) {
+void iter1(struct mosquitto_db *db) {
+	static int zzz = 0;
+	if(zzz++ % 10 != 0) return;
 	struct mosquitto *context, *ctxt_tmp;
 	char *id;
 		int time_count = 0;
@@ -379,7 +381,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 #ifdef WITH_BRIDGE
 		context_count += db->bridge_count;
 #endif
-		//iter1(db);
+		iter1(db);
 		bridgeThing(db);
 		now_time = time(NULL);
 		iter2(db,&expiration_check_time);
